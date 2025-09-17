@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Travel Site</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    button, a { margin: 10px; padding: 10px 20px; cursor: pointer; }
+    .uitk-button { background: #0066cc; color: white; border: none; }
+    .site-title { margin-top: 20px; font-size: 24px; color: darkblue; }
+    .bed-and-bath__title { margin-top: 20px; font-size: 22px; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Demo Travel Site</h1>
+
+  <!-- Where to -->
+  <button aria-label="Where to?">Where to?</button>
+
+  <!-- Date selector -->
+  <button name="EGDSDateRange-date-selector-trigger">Select Dates</button>
+  <button class="uitk-button uitk-button-large uitk-button-fullWidth uitk-button-has-text uitk-button-primary">Done</button>
+
+  <!-- Search -->
+  <button id="search_button">Search</button>
+
+  <hr>
+
+  <!-- Country navigation -->
+  <div>
+    <a href="#" id="link-us">United States</a>
+    <a href="#" id="link-fr">France</a>
+  </div>
+  <h5 class="site-title">Newsroom</h5>
+
+  <hr>
+
+  <!-- Property listing -->
+  <a href="#" id="list-property">List your property</a>
+  <p id="private-residence" style="display:none;">Private residence</p>
+
+  <button id="onetrust-pc-btn-handler" style="display:none;">Show purposes</button>
+  <button class="save-preference-btn-handler onetrust-close-btn-handler" style="display:none;">Confirm</button>
+
+  <h2 class="bed-and-bath__title" style="display:none;">See how much you could earn!</h2>
+
+  <script>
+    // Fake behavior
+    document.getElementById("link-fr").addEventListener("click", function() {
+      alert("France clicked!");
+    });
+
+    document.getElementById("list-property").addEventListener("click", function() {
+      document.getElementById("private-residence").style.display = "block";
+      document.getElementById("onetrust-pc-btn-handler").style.display = "inline-block";
+      document.querySelector(".save-preference-btn-handler").style.display = "inline-block";
+      document.querySelector(".bed-and-bath__title").style.display = "block";
+    });
+  </script>
+</body>
+</html>
