@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Burn mode: burning letters, falling ash, flamethrower, HUD.
+   ========================================================================== */
+
+.fire-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 9300; pointer-events: none; }
+.burn-layer { position: fixed; inset: 0; z-index: 9050; pointer-events: none; overflow: hidden; }
+
+/* nav toggle */
+#burnToggle.is-on { background: linear-gradient(160deg, #ffb02e, #ff4d0d); border-color: #ff6a1a; color: #1a0802; }
+#burnToggle.is-on svg { animation: flick .5s ease-in-out infinite alternate; }
+
+.burn-mode body { -webkit-user-select: none; user-select: none; }
+.burn-mode:not(.has-cursor) body { cursor: crosshair; }
+.burn-mode .cursor__cross { opacity: 1; transform: none; stroke: #ff8a3d; }
+.burn-mode .cursor__ring { opacity: 0; }
+.burn-mode .cursor__dot { background: #ffb02e; box-shadow: 0 0 10px 3px rgba(255, 120, 30, .7); }
+
+/* letters on fire → charred → gone (space kept so the layout never jumps) */
+.bl--fire {
+  color: #fff1c2 !important;
+  -webkit-text-fill-color: #fff1c2;
+  text-shadow: 0 0 4px #ffcf5a, 0 -2px 8px #ff8a1a, 0 -6px 16px #ff3d00, 0 0 26px rgba(255, 60, 0, .6);
+  animation: emberFlicker .16s steps(2) infinite alternate;
+}
+.bl--char {
+  color: #2a1a12 !important;
+  -webkit-text-fill-color: #2a1a12;
+  text-shadow: 0 0 2px #ff5a00, 0 0 7px rgba(255, 70, 0, .75), 0 -3px 10px rgba(80, 60, 50, .6);
+  transition: color .3s, text-shadow .3s;
+}
+.bl--gone { visibility: hidden; }
+
+/* the falling charred copy of each letter */
+.burn-clone {
+  position: absolute; white-space: pre; will-change: transform, opacity;
+  color: #24160f;
+  text-shadow: 0 0 3px #ff6a00, 0 0 9px rgba(255, 80, 0, .7);
+}
+[data-theme="light"] .burn-clone { color: #1c120b; }
+
+/* flamethrower */
+.flamer {
+  position: fixed; left: 0; top: 0; z-index: 9200; width: 250px; height: 104px;
+  transform-origin: 70px 62px; pointer-events: none;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .45));
+  display: none;
+}
+.burn-mode .flamer { display: block; }
+.flamer__gun { display: block; overflow: visible; transform-origin: 70px 62px; }
+.burn-mode .flamer__gun { animation: gunIn .7s cubic-bezier(.16, 1, .3, 1); }
+.flamer.is-firing .flamer__gun { animation: gunJitter .07s linear infinite; }
+.flamer__pilot { transform-origin: 234px 57px; animation: pilot .12s ease-in-out infinite alternate; }
+.flamer.is-firing .flamer__pilot { opacity: 0; }
+
+/* counter + restore */
+.burn-hud {
+  position: fixed; left: 20px; bottom: 20px; z-index: 9400;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 6px 6px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid rgba(255, 106, 26, .5);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font: 500 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  opacity: 0; transform: translateY(20px); pointer-events: none;
+  transition: opacity .4s, transform .5s var(--ease-out);
+}
+.burn-hud b { color: var(--text); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.burn-hud__restore {
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: #1a0802;
+  padding: 7px 12px; border-radius: 999px; background: linear-gradient(160deg, #ffb02e, #ff5a12);
+  transition: transform .2s, filter .2s;
+}
+.burn-hud__restore:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.burn-mode .burn-hud { opacity: 1; transform: none; pointer-events: auto; }
+.burn-mode .shot-hud { opacity: 0; }
+@media (max-width: 480px) { .burn-hud > span:not(.burn-hud__icon) { display: none; } .burn-hud { left: 12px; bottom: 12px; } }
+
+@keyframes emberFlicker {
+  0% { text-shadow: 0 0 4px #ffcf5a, 0 -2px 8px #ff8a1a, 0 -6px 16px #ff3d00, 0 0 26px rgba(255, 60, 0, .6); }
+  100% { text-shadow: 0 0 6px #ffe38a, 0 -4px 12px #ffa12e, 0 -9px 20px #ff4a0a, 0 0 30px rgba(255, 60, 0, .75); }
+}
+@keyframes flick { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.1) rotate(3deg); } }
+@keyframes pilot { from { transform: scale(.85, .9); } to { transform: scale(1.15, 1.08); } }
+@keyframes gunIn { from { transform: translate(-60px, 70px) rotate(25deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes gunJitter {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-2px, 1px); }
+  100% { transform: translate(1px, -1px); }
+}

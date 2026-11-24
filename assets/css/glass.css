@@ -1,0 +1,167 @@
+/* ==========================================================================
+   Glass-break layer: intro pane, crack overlay, shoot mode, HUD.
+   ========================================================================== */
+
+/* crack + shard overlay (drawn by glass.js) */
+.fx-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 9000; pointer-events: none; }
+
+/* ---------- nav toggles ---------- */
+#shootToggle.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+#shootToggle.is-on svg { animation: spin 6s linear infinite; }
+#soundToggle .i-mute { display: none; }
+#soundToggle.is-muted .i-sound { display: none; }
+#soundToggle.is-muted .i-mute { display: block; }
+#soundToggle.is-muted { color: var(--muted); }
+/* more buttons in the top bar now: drop the "Quick menu" words before it gets cramped */
+@media (max-width: 1140px) {
+  .kbd-btn > span { display: none; }
+  .kbd-btn { padding: 0 6px; }
+}
+@media (max-width: 400px) {
+  .nav__actions { gap: 6px; }
+  .nav__actions .icon-btn { width: 36px; height: 36px; }
+  .nav__logo span:last-child { display: none; }
+}
+
+/* ---------- shoot mode ---------- */
+.shoot-mode body { -webkit-user-select: none; user-select: none; }
+.shoot-mode:not(.has-cursor) body, .intro-open:not(.has-cursor) .intro { cursor: crosshair; }
+
+.cursor__cross {
+  position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  stroke: var(--text); opacity: 0; transform: scale(.4) rotate(-45deg);
+  filter: drop-shadow(0 0 1.5px var(--bg)) drop-shadow(0 0 1px var(--bg));
+  transition: opacity .25s, transform .35s var(--ease-out);
+  pointer-events: none;
+}
+.shoot-mode .cursor__cross, .intro-open .cursor__cross { opacity: 1; transform: none; }
+.shoot-mode .cursor__ring, .intro-open .cursor__ring { opacity: 0; }
+.shoot-mode .cursor__dot, .intro-open .cursor__dot { background: var(--accent); }
+.cursor.is-firing .cursor__cross { animation: recoil .22s var(--ease-out); }
+.intro-open .cursor { z-index: 10003; }
+
+/* screen shake on every shot */
+#main.is-shaking { animation: shake .16s linear; }
+
+/* shot counter */
+.shot-hud {
+  position: fixed; left: 20px; bottom: 20px; z-index: 65;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid var(--line-2);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font: 500 12px var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+  opacity: 0; transform: translateY(20px); pointer-events: none;
+  transition: opacity .4s, transform .5s var(--ease-out);
+}
+.shot-hud b { color: var(--text); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+.shot-hud__icon { color: var(--accent); font-size: 15px; }
+.shoot-mode .shot-hud { opacity: 1; transform: none; }
+.shot-hud.is-bump b { animation: bump .3s var(--ease-out); }
+
+/* break progress: 3 pips fill with each quick shot */
+.shot-hud__pips { display: inline-flex; gap: 4px; margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--line-2); }
+.shot-hud__pips i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--muted); transition: background-color .2s, border-color .2s, transform .3s var(--ease-out); }
+.shot-hud__pips i.on { background: var(--accent); border-color: var(--accent); transform: scale(1.25); }
+
+/* ---------- fly-through transition between screens ---------- */
+#main.warp-out { animation: warpOut .43s cubic-bezier(.6, 0, .9, .45) forwards; }
+#main.warp-in { animation: warpIn .85s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes warpOut {
+  0% { transform: none; filter: none; opacity: 1; }
+  100% { transform: scale(1.55) rotate(-1.5deg); filter: blur(14px) brightness(1.7) saturate(1.4); opacity: 0; }
+}
+@keyframes warpIn {
+  0% { transform: scale(.78) rotate(1deg); filter: blur(12px) brightness(.6); opacity: 0; }
+  55% { filter: blur(0) brightness(1.08); opacity: 1; }
+  100% { transform: none; filter: none; opacity: 1; }
+}
+/* weaker devices: same motion, no expensive blur */
+.lite #main.warp-out { animation-name: warpOutLite; }
+.lite #main.warp-in { animation-name: warpInLite; }
+@keyframes warpOutLite { to { transform: scale(1.45); opacity: 0; } }
+@keyframes warpInLite { from { transform: scale(.82); opacity: 0; } }
+
+/* section title card that slams in after the break */
+.warp-card {
+  position: fixed; inset: 0; z-index: 9500; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  text-align: center; opacity: 0;
+}
+.warp-card__num { font: 500 13px var(--font-mono); letter-spacing: .3em; color: var(--accent); }
+.warp-card__name {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400;
+  font-size: clamp(3rem, 13vw, 11rem); line-height: .9; letter-spacing: -.03em; color: var(--text);
+  text-shadow: 0 10px 60px color-mix(in srgb, var(--bg) 70%, transparent);
+  padding: 0 16px;
+}
+.warp-card__bar { width: 0; height: 2px; background: var(--accent); }
+.warp-card.is-on { animation: cardLife 1.25s cubic-bezier(.2, .8, .2, 1) forwards; }
+.warp-card.is-on .warp-card__name { animation: cardSlam 1.25s cubic-bezier(.2, .8, .2, 1) forwards; }
+.warp-card.is-on .warp-card__bar { animation: cardBar 1.25s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes cardLife { 0% { opacity: 0; } 12% { opacity: 1; } 68% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cardSlam {
+  0% { transform: scale(1.9); letter-spacing: .2em; filter: blur(10px); }
+  22% { transform: scale(.97); letter-spacing: -.03em; filter: blur(0); }
+  30% { transform: scale(1); }
+  100% { transform: scale(.94) translateY(-8px); }
+}
+@keyframes cardBar { 0% { width: 0; } 30% { width: 0; } 70% { width: min(240px, 50vw); } 100% { width: min(240px, 50vw); opacity: 0; } }
+
+/* ---------- intro pane ---------- */
+.intro { position: fixed; inset: 0; z-index: 10001; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.intro-open body { overflow: hidden; }
+.intro__blur {
+  position: absolute; inset: 0;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+  transition: opacity .25s;
+}
+.intro__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.intro__ui { position: absolute; inset: 0; pointer-events: none; transition: opacity .2s; }
+.intro__bar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 22px var(--gutter);
+  font: 500 12px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+}
+.intro__skip {
+  pointer-events: auto; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--text-2);
+  padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line-2);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  transition: background-color .2s, color .2s, border-color .2s;
+}
+.intro__skip:hover { color: var(--accent); border-color: var(--accent); }
+.intro__ping { display: none; }
+@media (pointer: coarse) {
+  .intro__ping {
+    display: block; position: absolute; left: 50%; top: 76%; width: 56px; height: 56px; margin: -28px 0 0 -28px;
+    border-radius: 50%; border: 2px solid var(--accent);
+    animation: ping 1.6s var(--ease) infinite;
+  }
+}
+.intro.is-hit .intro__canvas { animation: shake .18s linear; }
+.intro.is-broken .intro__blur, .intro.is-broken .intro__ui { opacity: 0; }
+.intro.is-skipped { opacity: 0; transition: opacity .4s; }
+
+/* the old counter loader is replaced by the glass intro when it runs */
+.intro-open .loader { display: none !important; }
+
+@keyframes shake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 2px); }
+  40% { transform: translate(4px, -3px); }
+  60% { transform: translate(-3px, -1px); }
+  80% { transform: translate(2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes recoil {
+  0% { transform: none; }
+  30% { transform: translateY(-7px) scale(1.25) rotate(8deg); }
+  100% { transform: none; }
+}
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.45); color: var(--accent); } 100% { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #main.is-shaking, .intro.is-hit .intro__canvas { animation: none; }
+}
